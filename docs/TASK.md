@@ -34,8 +34,8 @@
 - [ ] Hak akses kasir.
 
 ## Phase 4: Gudang dan pengiriman
-- [ ] Daftar picking.
-- [ ] Status persiapan.
+- [x] Daftar picking.
+- [x] Status persiapan.
 - [ ] Surat Jalan dan sequence.
 - [ ] Ambil sendiri/kirim.
 - [x] Stock movement dengan stok fisik, cadangan, dan tersedia.

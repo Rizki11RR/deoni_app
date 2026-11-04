@@ -6,6 +6,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PickingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StocktakeController;
@@ -36,6 +37,8 @@ Route::middleware('auth')->group(function (): void {
     Route::middleware('permission:create-orders')->group(function (): void {
         Route::resource('orders', OrderController::class)->only(['index', 'create', 'store']);
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+        Route::get('/picking', [PickingController::class, 'index'])->name('picking.index');
+        Route::patch('/picking/{order}', [PickingController::class, 'update'])->name('picking.update');
     });
     Route::middleware('permission:manage-customers')->group(function (): void {
         Route::resource('customers', CustomerController::class)->only(['index', 'create', 'store']);
