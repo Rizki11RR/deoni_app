@@ -1,7 +1,7 @@
 # PROGRESS
 
 ## Status
-Discovery selesai dan keputusan bisnis utama disetujui pada 2026-11-03. Fondasi Laravel dan Docker selesai; PostgreSQL aktif dan terhubung; Identity & Access selesai; master Produk, Kategori, dan Pelanggan selesai; fondasi Order/Nota dan sequence dokumen aman selesai; pembayaran dasar dan reversal selesai; audit activity, soft delete seluruh model, halaman error global, dan stok fisik/reservasi selesai; pembatalan order melepas reservasi; audit log viewer selesai.
+Discovery selesai dan keputusan bisnis utama disetujui pada 2026-11-03. Fondasi Laravel dan Docker selesai; PostgreSQL aktif dan terhubung; Identity & Access selesai; master Produk, Kategori, dan Pelanggan selesai; fondasi Order/Nota dan sequence dokumen aman selesai; pembayaran dasar dan reversal selesai; audit activity, soft delete seluruh model, halaman error global, dan stok fisik/reservasi selesai; pembatalan order melepas reservasi; audit log viewer dan stocktake rekonsiliasi selesai.
 
 ## Fakta konteks
 - Usaha: toko bahan kue.

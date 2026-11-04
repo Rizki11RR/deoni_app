@@ -39,7 +39,7 @@
 - [ ] Surat Jalan dan sequence.
 - [ ] Ambil sendiri/kirim.
 - [x] Stock movement dengan stok fisik, cadangan, dan tersedia.
-- [ ] Stocktake dan rekonsiliasi bertahap.
+- [x] Stocktake dan rekonsiliasi bertahap.
 
 ## Phase 5: Laporan dan hardening
 - [ ] Laporan penjualan/pembayaran.
