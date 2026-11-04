@@ -9,6 +9,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PickingController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImportController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StocktakeController;
@@ -55,6 +56,9 @@ Route::middleware('auth')->group(function (): void {
     });
     Route::middleware('permission:manage-products')->group(function (): void {
         Route::resource('products', ProductController::class)->only(['index', 'create', 'store']);
+        Route::get('/products/import', [ProductImportController::class, 'create'])->name('products.import.create');
+        Route::post('/products/import/preview', [ProductImportController::class, 'preview'])->name('products.import.preview');
+        Route::post('/products/import', [ProductImportController::class, 'store'])->name('products.import.store');
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
         Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
     });

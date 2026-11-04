@@ -14,7 +14,7 @@
 - [x] Pelanggan.
 - [ ] Satuan dan konversi yang disetujui.
 - [ ] Harga Toko dan Hotel.
-- [ ] Import produk dengan preview dan validasi.
+- [x] Import produk dengan preview dan validasi.
 
 ## Phase 2: Penjualan
 - [x] Draft order dan item.
