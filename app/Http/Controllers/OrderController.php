@@ -29,6 +29,11 @@ class OrderController extends Controller
         ]);
     }
 
+    public function print(Order $order): View
+    {
+        return view('orders.print', ['order' => $order->load(['customer', 'creator', 'items', 'payments'])]);
+    }
+
     private function nextDocumentNumber(string $documentType): string
     {
         $sequence = DocumentSequence::query()->lockForUpdate()->firstOrCreate(
@@ -121,6 +126,7 @@ class OrderController extends Controller
                     'document_type' => $data['document_type'],
                     'document_number' => (string) $this->nextDocumentNumber($data['document_type']),
                     'status' => 'draft',
+                    'preparation_status' => 'pending',
                     'subtotal' => $subtotal,
                     'discount_amount' => $discountAmount,
                     'tax_amount' => $taxAmount,
@@ -147,12 +153,7 @@ class OrderController extends Controller
                         'line_total' => $line['lineTotal'],
                     ]);
                     $balance->update(['reserved_quantity' => number_format((float) $balance->reserved_quantity + (float) $quantity, 3, '.', '')]);
-                    StockReservation::create([
-                        'product_id' => $line['product']->id,
-                        'order_id' => $order->id,
-                        'quantity' => $quantity,
-                        'status' => 'reserved',
-                    ]);
+                    StockReservation::create(['product_id' => $line['product']->id, 'order_id' => $order->id, 'quantity' => $quantity, 'status' => 'reserved']);
                 }
 
                 return $order;

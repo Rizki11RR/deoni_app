@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function (): void {
     });
     Route::middleware('permission:create-orders')->group(function (): void {
         Route::resource('orders', OrderController::class)->only(['index', 'create', 'store']);
+        Route::get('/orders/{order}/print', [OrderController::class, 'print'])->name('orders.print');
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
         Route::get('/picking', [PickingController::class, 'index'])->name('picking.index');
         Route::patch('/picking/{order}', [PickingController::class, 'update'])->name('picking.update');

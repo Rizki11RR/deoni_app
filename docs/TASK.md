@@ -23,7 +23,7 @@
 - [ ] Diskon nominal/persentase tanpa batas.
 - [x] Pajak 11% termasuk harga.
 - [x] Sequence dokumen angka tanpa duplikasi, melanjutkan sequence lama.
-- [ ] Cetak nota dua salinan.
+- [x] Cetak nota dua salinan.
 - [x] Audit perubahan dan state transition.
 
 ## Phase 3: Pembayaran
