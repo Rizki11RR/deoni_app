@@ -4,6 +4,7 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DeliveryNoteController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PickingController;
@@ -39,6 +40,10 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
         Route::get('/picking', [PickingController::class, 'index'])->name('picking.index');
         Route::patch('/picking/{order}', [PickingController::class, 'update'])->name('picking.update');
+        Route::get('/delivery-notes', [DeliveryNoteController::class, 'index'])->name('delivery-notes.index');
+        Route::get('/delivery-notes/create', [DeliveryNoteController::class, 'create'])->name('delivery-notes.create');
+        Route::post('/delivery-notes', [DeliveryNoteController::class, 'store'])->name('delivery-notes.store');
+        Route::post('/delivery-notes/{deliveryNote}/deliver', [DeliveryNoteController::class, 'deliver'])->name('delivery-notes.deliver');
     });
     Route::middleware('permission:manage-customers')->group(function (): void {
         Route::resource('customers', CustomerController::class)->only(['index', 'create', 'store']);

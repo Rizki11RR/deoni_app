@@ -36,8 +36,8 @@
 ## Phase 4: Gudang dan pengiriman
 - [x] Daftar picking.
 - [x] Status persiapan.
-- [ ] Surat Jalan dan sequence.
-- [ ] Ambil sendiri/kirim.
+- [x] Surat Jalan dan sequence.
+- [x] Ambil sendiri/kirim.
 - [x] Stock movement dengan stok fisik, cadangan, dan tersedia.
 - [x] Stocktake dan rekonsiliasi bertahap.
 

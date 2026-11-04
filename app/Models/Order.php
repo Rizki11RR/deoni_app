@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['customer_id', 'created_by', 'document_type', 'document_number', 'status', 'preparation_status', 'subtotal', 'discount_amount', 'tax_amount', 'total', 'notes'])]
@@ -46,5 +47,10 @@ class Order extends Model
     public function stockReservations(): HasMany
     {
         return $this->hasMany(StockReservation::class);
+    }
+
+    public function deliveryNote(): HasOne
+    {
+        return $this->hasOne(DeliveryNote::class);
     }
 }
