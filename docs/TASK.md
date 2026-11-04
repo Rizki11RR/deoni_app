@@ -12,7 +12,7 @@
 ## Phase 1: Master data
 - [x] Produk dan kategori.
 - [x] Pelanggan.
-- [ ] Satuan dan konversi yang disetujui.
+- [x] Satuan dan konversi yang disetujui.
 - [ ] Harga Toko dan Hotel.
 - [x] Import produk dengan preview dan validasi.
 
@@ -20,7 +20,7 @@
 - [x] Draft order dan item.
 - [x] Tipe harga/dokumen.
 - [x] Snapshot harga dan detail produk.
-- [ ] Diskon nominal/persentase tanpa batas.
+- [x] Diskon nominal/persentase tanpa batas.
 - [x] Pajak 11% termasuk harga.
 - [x] Sequence dokumen angka tanpa duplikasi, melanjutkan sequence lama.
 - [x] Cetak nota dua salinan.
@@ -31,7 +31,7 @@
 - [x] Parsial/bon dan multi-metode.
 - [x] Status lunas dan saldo.
 - [x] Reversal dengan otorisasi dan audit.
-- [ ] Hak akses kasir.
+- [x] Hak akses kasir.
 
 ## Phase 4: Gudang dan pengiriman
 - [x] Daftar picking.
@@ -43,13 +43,13 @@
 
 ## Phase 5: Laporan dan hardening
 - [x] Laporan penjualan/pembayaran.
-- [ ] Piutang/bon bila diperlukan.
+- [x] Piutang/bon tanpa limit, jatuh tempo opsional, reminder overdue.
 - [x] Audit log viewer.
-- [ ] Backup dan uji restore.
+- [x] Backup lokal dan uji restore.
 - [ ] Uji hak akses, concurrency, sequence.
 - [ ] Uji printer/kertas nyata.
 - [ ] UAT dengan staf.
-- [ ] Dokumentasi deployment.
+- [x] Dokumentasi deployment shared hosting.
 
 ## MVP prioritas
 Master data → nota besar/POS → pembayaran → cetak nota. Reservasi stok dan movement dasar masuk MVP; stocktake lanjutan menyusul setelah data stok awal siap.

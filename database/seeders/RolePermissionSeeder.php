@@ -28,6 +28,7 @@ class RolePermissionSeeder extends Seeder
             'manage-customers' => 'Kelola pelanggan',
             'create-orders' => 'Buat order',
             'manage-payments' => 'Kelola pembayaran',
+            'approve-bons' => 'Setujui bon',
             'manage-inventory' => 'Kelola stok',
             'view-reports' => 'Lihat laporan',
         ];
@@ -38,7 +39,7 @@ class RolePermissionSeeder extends Seeder
 
         Role::where('name', 'admin')->firstOrFail()->permissions()->sync(Permission::all());
         Role::where('name', 'owner')->firstOrFail()->permissions()->sync(Permission::all());
-        Role::where('name', 'cashier')->firstOrFail()->permissions()->sync(Permission::whereIn('name', ['create-orders', 'manage-payments', 'view-reports'])->pluck('id'));
+        Role::where('name', 'cashier')->firstOrFail()->permissions()->sync(Permission::whereIn('name', ['create-orders', 'manage-payments', 'approve-bons', 'view-reports'])->pluck('id'));
         Role::where('name', 'sales')->firstOrFail()->permissions()->sync(Permission::whereIn('name', ['create-orders', 'manage-customers'])->pluck('id'));
         Role::where('name', 'warehouse')->firstOrFail()->permissions()->sync(Permission::whereIn('name', ['manage-inventory', 'create-orders'])->pluck('id'));
     }

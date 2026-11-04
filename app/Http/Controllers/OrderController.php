@@ -29,6 +29,17 @@ class OrderController extends Controller
         ]);
     }
 
+    public function approve(Request $request, Order $order): RedirectResponse
+    {
+        if ($order->document_type !== 'store') {
+            return back()->withErrors(['order' => 'Hanya bon yang dapat disetujui.']);
+        }
+
+        $order->update(['status' => 'approved', 'approved_by' => $request->user()->id, 'approved_at' => now()]);
+
+        return back()->with('success', "Bon {$order->document_number} berhasil disetujui.");
+    }
+
     public function print(Order $order): View
     {
         return view('orders.print', ['order' => $order->load(['customer', 'creator', 'items', 'payments'])]);
@@ -85,6 +96,7 @@ class OrderController extends Controller
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
             'discount_type' => ['nullable', 'in:amount,percentage'],
             'discount_value' => ['nullable', 'numeric', 'min:0'],
+            'due_date' => ['nullable', 'date', 'after_or_equal:today'],
         ]);
 
         if ($data['document_type'] !== 'pos' && empty($data['customer_id'])) {
@@ -94,16 +106,27 @@ class OrderController extends Controller
         try {
             $order = $database->transaction(function () use ($data, $request): Order {
                 $items = collect($data['items']);
-                $products = Product::whereIn('id', $items->pluck('product_id'))->get()->keyBy('id');
+                $products = Product::with(['uom', 'salesUom'])->where('is_active', true)->whereIn('id', $items->pluck('product_id'))->get()->keyBy('id');
                 $subtotal = '0.00';
                 $lines = [];
 
                 foreach ($items as $item) {
                     $product = $products->get($item['product_id']);
+
+                    if ($product === null) {
+                        throw new \InvalidArgumentException('Produk tidak aktif atau tidak ditemukan.');
+                    }
+
+                    $uom = $product->salesUom ?: $product->uom;
+                    if ($uom && (! $uom->is_active || ! $uom->category || ! $uom->category->is_active)) {
+                        throw new \InvalidArgumentException("Satuan produk {$product->name} tidak aktif.");
+                    }
+                    $factor = $uom ? (float) $uom->conversion_factor : 1;
+                    $baseQuantity = $uom && $uom->conversion_type === 'divide' ? (float) $item['quantity'] / $factor : (float) $item['quantity'] * $factor;
                     $unitPrice = $data['document_type'] === 'hotel' ? $product->hotel_price : $product->store_price;
                     $lineTotal = number_format((float) $unitPrice * (float) $item['quantity'], 2, '.', '');
                     $subtotal = number_format((float) $subtotal + (float) $lineTotal, 2, '.', '');
-                    $lines[] = compact('product', 'item', 'unitPrice', 'lineTotal');
+                    $lines[] = compact('product', 'item', 'uom', 'factor', 'baseQuantity', 'unitPrice', 'lineTotal');
                 }
 
                 $discountType = $data['discount_type'] ?? null;
@@ -123,6 +146,7 @@ class OrderController extends Controller
                 $order = Order::create([
                     'customer_id' => $data['customer_id'] ?? null,
                     'created_by' => $request->user()->id,
+                    'due_date' => $data['due_date'] ?? null,
                     'document_type' => $data['document_type'],
                     'document_number' => (string) $this->nextDocumentNumber($data['document_type']),
                     'status' => 'draft',
@@ -136,7 +160,7 @@ class OrderController extends Controller
                 foreach ($lines as $line) {
                     $balance = StockBalance::query()->lockForUpdate()->firstOrCreate(['product_id' => $line['product']->id]);
                     $available = (float) $balance->physical_quantity - (float) $balance->reserved_quantity;
-                    $quantity = (string) $line['item']['quantity'];
+                    $quantity = number_format((float) $line['baseQuantity'], 6, '.', '');
 
                     if ($available < (float) $quantity) {
                         throw new \InvalidArgumentException("Stok {$line['product']->name} tidak mencukupi.");
@@ -146,7 +170,11 @@ class OrderController extends Controller
                         'product_id' => $line['product']->id,
                         'product_name' => $line['product']->name,
                         'quantity' => $line['item']['quantity'],
+                        'base_quantity' => $line['baseQuantity'],
+                        'uom_id' => $line['uom']?->id,
                         'unit' => $line['product']->unit,
+                        'uom_symbol' => $line['uom']?->symbol,
+                        'uom_factor' => $line['factor'],
                         'unit_price' => $line['unitPrice'],
                         'master_unit_price' => $line['unitPrice'],
                         'price_difference' => '0.00',

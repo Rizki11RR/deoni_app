@@ -10,9 +10,12 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PickingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImportController;
+use App\Http\Controllers\ProductPackagingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StocktakeController;
+use App\Http\Controllers\UomCategoryController;
+use App\Http\Controllers\UomController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +47,7 @@ Route::middleware('auth')->group(function (): void {
         Route::resource('orders', OrderController::class)->only(['index', 'create', 'store']);
         Route::get('/orders/{order}/print', [OrderController::class, 'print'])->name('orders.print');
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+        Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])->middleware('permission:approve-bons')->name('orders.approve');
         Route::get('/picking', [PickingController::class, 'index'])->name('picking.index');
         Route::patch('/picking/{order}', [PickingController::class, 'update'])->name('picking.update');
         Route::get('/delivery-notes', [DeliveryNoteController::class, 'index'])->name('delivery-notes.index');
@@ -61,6 +65,10 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/products/import', [ProductImportController::class, 'store'])->name('products.import.store');
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
         Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+        Route::resource('uom-categories', UomCategoryController::class)->only(['index', 'store']);
+        Route::resource('uoms', UomController::class)->only(['index', 'store']);
+        Route::get('/products/{product}/packagings', [ProductPackagingController::class, 'index'])->name('products.packagings.index');
+        Route::post('/products/{product}/packagings', [ProductPackagingController::class, 'store'])->name('products.packagings.store');
     });
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 });

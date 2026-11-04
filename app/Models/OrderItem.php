@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['order_id', 'product_id', 'product_name', 'quantity', 'unit', 'unit_price', 'master_unit_price', 'price_difference', 'discount_amount', 'tax_amount', 'line_total'])]
+#[Fillable(['order_id', 'product_id', 'uom_id', 'product_name', 'quantity', 'base_quantity', 'unit', 'uom_symbol', 'uom_factor', 'unit_price', 'master_unit_price', 'price_difference', 'discount_amount', 'tax_amount', 'line_total'])]
 class OrderItem extends Model
 {
     use SoftDeletes;
@@ -16,6 +16,8 @@ class OrderItem extends Model
     {
         return [
             'quantity' => 'decimal:3',
+            'base_quantity' => 'decimal:6',
+            'uom_factor' => 'decimal:6',
             'unit_price' => 'decimal:2',
             'master_unit_price' => 'decimal:2',
             'price_difference' => 'decimal:2',
