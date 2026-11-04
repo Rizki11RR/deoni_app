@@ -9,6 +9,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PickingController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StocktakeController;
 use App\Http\Controllers\UserController;
@@ -28,6 +29,9 @@ Route::middleware('auth')->group(function (): void {
     Route::middleware('permission:manage-inventory')->group(function (): void {
         Route::resource('stock', StockController::class)->only(['index', 'create', 'store']);
         Route::resource('stocktakes', StocktakeController::class)->only(['index', 'create', 'store']);
+    });
+    Route::middleware('permission:view-reports')->group(function (): void {
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     });
     Route::middleware('permission:manage-payments')->group(function (): void {
         Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
