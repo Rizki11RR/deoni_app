@@ -50,12 +50,22 @@ class PaymentController extends Controller
                     'paid_at' => now(),
                     'reversal_of_id' => $lockedPayment->id,
                 ]);
+                $this->refreshPaymentStatus($lockedPayment->order_id);
             });
         } catch (Throwable $exception) {
             return back()->withErrors(['payment' => $exception instanceof \InvalidArgumentException ? $exception->getMessage() : 'Reversal pembayaran gagal.'])->withInput();
         }
 
         return back()->with('success', 'Pembayaran berhasil dibatalkan.');
+    }
+
+    private function refreshPaymentStatus(int $orderId): void
+    {
+        $order = Order::query()->lockForUpdate()->findOrFail($orderId);
+        $paid = (float) $order->payments()->sum('amount');
+        $total = (float) $order->total;
+        $status = $paid <= 0 ? 'unpaid' : ($paid >= $total ? 'paid' : 'partially_paid');
+        $order->update(['payment_status' => $status]);
     }
 
     public function store(Request $request, Order $order, DatabaseManager $database): RedirectResponse
@@ -86,6 +96,7 @@ class PaymentController extends Controller
                     'notes' => $data['notes'] ?? null,
                     'paid_at' => now(),
                 ]);
+                $this->refreshPaymentStatus($lockedOrder->id);
             });
         } catch (Throwable $exception) {
             return back()->withErrors(['payment' => $exception instanceof \InvalidArgumentException ? $exception->getMessage() : 'Pembayaran gagal disimpan.'])->withInput();

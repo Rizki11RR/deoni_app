@@ -27,9 +27,9 @@
 - [x] Audit perubahan dan state transition.
 
 ## Phase 3: Pembayaran
-- [ ] Pembayaran dan metode.
-- [ ] Parsial/bon dan multi-metode.
-- [ ] Status lunas dan saldo.
+- [x] Pembayaran dan metode.
+- [x] Parsial/bon dan multi-metode.
+- [x] Status lunas dan saldo.
 - [x] Reversal dengan otorisasi dan audit.
 - [ ] Hak akses kasir.
 
