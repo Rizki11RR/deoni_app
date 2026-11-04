@@ -19,6 +19,8 @@ class PaymentController extends Controller
 
     public function create(Order $order): View
     {
+        abort_if($order->status === 'cancelled', 422, 'Pembayaran tidak dapat dicatat untuk order yang dibatalkan.');
+
         $paid = $order->payments()->sum('amount');
 
         return view('payments.create', compact('order', 'paid'));
@@ -31,6 +33,11 @@ class PaymentController extends Controller
         try {
             $database->transaction(function () use ($payment, $request, $data): void {
                 $lockedPayment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
+                $lockedOrder = Order::query()->lockForUpdate()->findOrFail($lockedPayment->order_id);
+
+                if ($lockedOrder->status === 'cancelled') {
+                    throw new \InvalidArgumentException('Pembayaran order yang dibatalkan tidak dapat dibatalkan lagi.');
+                }
 
                 if ($lockedPayment->reversal_of_id !== null) {
                     throw new \InvalidArgumentException('Pembayaran sudah dibatalkan.');
@@ -80,6 +87,11 @@ class PaymentController extends Controller
         try {
             $database->transaction(function () use ($data, $order, $request): void {
                 $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
+
+                if ($lockedOrder->status === 'cancelled') {
+                    throw new \InvalidArgumentException('Pembayaran tidak dapat dicatat untuk order yang dibatalkan.');
+                }
+
                 $paid = $lockedOrder->payments()->sum('amount');
                 $remaining = number_format((float) $lockedOrder->total - (float) $paid, 2, '.', '');
 

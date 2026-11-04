@@ -41,7 +41,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
         Route::get('/orders/{order}/payments/create', [PaymentController::class, 'create'])->name('payments.create');
         Route::post('/orders/{order}/payments', [PaymentController::class, 'store'])->name('payments.store');
-        Route::post('/payments/{payment}/reverse', [PaymentController::class, 'reverse'])->name('payments.reverse');
+        Route::post('/payments/{payment}/reverse', [PaymentController::class, 'reverse'])->middleware('permission:reverse-payments')->name('payments.reverse');
     });
     Route::middleware('permission:create-orders')->group(function (): void {
         Route::resource('orders', OrderController::class)->only(['index', 'create', 'store']);

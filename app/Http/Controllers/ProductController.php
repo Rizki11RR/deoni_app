@@ -34,6 +34,12 @@ class ProductController extends Controller
             'store_price' => ['required', 'numeric', 'min:0'],
             'hotel_price' => ['required', 'numeric', 'min:0'],
         ]);
+        $uoms = Uom::with('category')->whereIn('id', collect([$data['uom_id'], $data['purchase_uom_id'] ?? null, $data['sales_uom_id'] ?? null])->filter())->get();
+        $baseCategoryId = $uoms->firstWhere('id', $data['uom_id'])?->uom_category_id;
+        if ($uoms->contains(fn (Uom $uom): bool => ! $uom->is_active || ! $uom->category?->is_active || $uom->uom_category_id !== $baseCategoryId)) {
+            return back()->withErrors(['uom_id' => 'Semua satuan harus aktif dalam kategori yang sama.'])->withInput();
+        }
+
         Product::create($data);
 
         return redirect()->route('products.index')->with('success', 'Produk berhasil dibuat.');

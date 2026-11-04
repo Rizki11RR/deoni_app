@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\DeliveryNote;
 use App\Models\DocumentSequence;
 use App\Models\Order;
+use App\Models\StockBalance;
+use App\Models\StockMovement;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -66,13 +68,47 @@ class DeliveryNoteController extends Controller
         return redirect()->route('delivery-notes.index')->with('success', "Surat jalan {$note->document_number} berhasil dibuat.");
     }
 
-    public function deliver(DeliveryNote $deliveryNote): RedirectResponse
+    public function deliver(DeliveryNote $deliveryNote, DatabaseManager $database, Request $request): RedirectResponse
     {
-        if ($deliveryNote->status !== 'issued') {
-            return back()->withErrors(['delivery_note' => 'Surat jalan sudah diproses.']);
-        }
+        try {
+            $database->transaction(function () use ($deliveryNote, $request): void {
+                $note = DeliveryNote::query()->lockForUpdate()->findOrFail($deliveryNote->id);
+                if ($note->status !== 'issued') {
+                    throw new \InvalidArgumentException('Surat jalan sudah diproses.');
+                }
 
-        $deliveryNote->update(['status' => 'delivered', 'delivered_at' => now()]);
+                $order = Order::query()->lockForUpdate()->with('items')->findOrFail($note->order_id);
+                if ($order->status === 'cancelled' || $order->preparation_status !== 'ready') {
+                    throw new \InvalidArgumentException('Order tidak dapat dikirim.');
+                }
+
+                foreach ($order->items as $item) {
+                    $quantity = (float) ($item->base_quantity ?? $item->quantity);
+                    $balance = StockBalance::query()->lockForUpdate()->where('product_id', $item->product_id)->first();
+                    if ($balance === null || (float) $balance->physical_quantity < $quantity) {
+                        throw new \InvalidArgumentException('Stok fisik tidak mencukupi.');
+                    }
+                    $balance->decrement('physical_quantity', $quantity);
+                    StockMovement::create([
+                        'product_id' => $item->product_id,
+                        'user_id' => $request->user()->id,
+                        'quantity' => number_format(-$quantity, 3, '.', ''),
+                        'type' => 'out',
+                        'reason' => "Delivery {$note->document_number}",
+                        'order_id' => $order->id,
+                    ]);
+                }
+
+                foreach ($order->stockReservations()->where('status', 'reserved')->lockForUpdate()->get() as $reservation) {
+                    $balance = StockBalance::query()->lockForUpdate()->where('product_id', $reservation->product_id)->firstOrFail();
+                    $balance->decrement('reserved_quantity', $reservation->quantity);
+                    $reservation->update(['status' => 'fulfilled']);
+                }
+                $note->update(['status' => 'delivered', 'delivered_at' => now()]);
+            });
+        } catch (Throwable $exception) {
+            return back()->withErrors(['delivery_note' => $exception instanceof \InvalidArgumentException ? $exception->getMessage() : 'Surat jalan gagal diselesaikan.']);
+        }
 
         return back()->with('success', "Surat jalan {$deliveryNote->document_number} berhasil diselesaikan.");
     }

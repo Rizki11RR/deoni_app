@@ -28,8 +28,14 @@ class PickingController extends Controller
                     throw new \InvalidArgumentException('Order yang dibatalkan tidak dapat diproses.');
                 }
 
-                if ($lockedOrder->preparation_status === 'ready' && $data['preparation_status'] !== 'ready') {
-                    throw new \InvalidArgumentException('Order siap tidak dapat dikembalikan ke status sebelumnya.');
+                $allowedTransitions = [
+                    'pending' => ['pending', 'preparing'],
+                    'preparing' => ['preparing', 'ready'],
+                    'ready' => ['ready'],
+                ];
+
+                if (! in_array($data['preparation_status'], $allowedTransitions[$lockedOrder->preparation_status] ?? [], true)) {
+                    throw new \InvalidArgumentException('Perubahan status persiapan tidak valid.');
                 }
 
                 $lockedOrder->update(['preparation_status' => $data['preparation_status']]);

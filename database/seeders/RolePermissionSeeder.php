@@ -29,6 +29,7 @@ class RolePermissionSeeder extends Seeder
             'create-orders' => 'Buat order',
             'manage-payments' => 'Kelola pembayaran',
             'approve-bons' => 'Setujui bon',
+            'reverse-payments' => 'Batalkan pembayaran',
             'manage-inventory' => 'Kelola stok',
             'view-reports' => 'Lihat laporan',
         ];

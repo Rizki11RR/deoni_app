@@ -25,17 +25,29 @@ class OrderController extends Controller
     {
         return view('orders.create', [
             'customers' => Customer::where('is_active', true)->orderBy('name')->get(),
-            'products' => Product::where('is_active', true)->orderBy('name')->get(),
+            'products' => Product::with(['uom', 'packagings.uom'])->where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
-    public function approve(Request $request, Order $order): RedirectResponse
+    public function approve(Request $request, Order $order, DatabaseManager $database): RedirectResponse
     {
-        if ($order->document_type !== 'store') {
-            return back()->withErrors(['order' => 'Hanya bon yang dapat disetujui.']);
-        }
+        try {
+            $database->transaction(function () use ($request, $order): void {
+                $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
 
-        $order->update(['status' => 'approved', 'approved_by' => $request->user()->id, 'approved_at' => now()]);
+                if ($lockedOrder->document_type !== 'store') {
+                    throw new \InvalidArgumentException('Hanya bon yang dapat disetujui.');
+                }
+
+                if ($lockedOrder->status !== 'draft') {
+                    throw new \InvalidArgumentException('Hanya bon berstatus pending yang dapat disetujui.');
+                }
+
+                $lockedOrder->update(['status' => 'approved', 'approved_by' => $request->user()->id, 'approved_at' => now()]);
+            });
+        } catch (Throwable $exception) {
+            return back()->withErrors(['order' => $exception instanceof \InvalidArgumentException ? $exception->getMessage() : 'Bon gagal disetujui.'])->withInput();
+        }
 
         return back()->with('success', "Bon {$order->document_number} berhasil disetujui.");
     }
@@ -93,6 +105,7 @@ class OrderController extends Controller
             'customer_id' => ['nullable', 'exists:customers,id'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.uom_id' => ['nullable', 'exists:uoms,id'],
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
             'discount_type' => ['nullable', 'in:amount,percentage'],
             'discount_value' => ['nullable', 'numeric', 'min:0'],
@@ -106,7 +119,7 @@ class OrderController extends Controller
         try {
             $order = $database->transaction(function () use ($data, $request): Order {
                 $items = collect($data['items']);
-                $products = Product::with(['uom', 'salesUom'])->where('is_active', true)->whereIn('id', $items->pluck('product_id'))->get()->keyBy('id');
+                $products = Product::with(['uom.category', 'salesUom.category', 'packagings.uom.category'])->where('is_active', true)->whereIn('id', $items->pluck('product_id'))->get()->keyBy('id');
                 $subtotal = '0.00';
                 $lines = [];
 
@@ -117,16 +130,30 @@ class OrderController extends Controller
                         throw new \InvalidArgumentException('Produk tidak aktif atau tidak ditemukan.');
                     }
 
-                    $uom = $product->salesUom ?: $product->uom;
-                    if ($uom && (! $uom->is_active || ! $uom->category || ! $uom->category->is_active)) {
-                        throw new \InvalidArgumentException("Satuan produk {$product->name} tidak aktif.");
+                    $uom = ! empty($item['uom_id']) ? $product->packagings->firstWhere('uom_id', $item['uom_id']) : null;
+                    $selectedUom = $uom?->uom ?? ($product->salesUom ?: $product->uom);
+                    if ($selectedUom !== null && (! $selectedUom->is_active || ! $selectedUom->category?->is_active || ($product->uom !== null && $selectedUom->uom_category_id !== $product->uom->uom_category_id))) {
+                        throw new \InvalidArgumentException("Satuan produk {$product->name} tidak valid.");
                     }
-                    $factor = $uom ? (float) $uom->conversion_factor : 1;
-                    $baseQuantity = $uom && $uom->conversion_type === 'divide' ? (float) $item['quantity'] / $factor : (float) $item['quantity'] * $factor;
-                    $unitPrice = $data['document_type'] === 'hotel' ? $product->hotel_price : $product->store_price;
+                    if ($item['uom_id'] ?? null) {
+                        if ($uom === null || ! $uom->is_active) {
+                            throw new \InvalidArgumentException("Kemasan produk {$product->name} tidak aktif.");
+                        }
+                        $factor = (float) $uom->quantity;
+                        $unitPrice = $data['document_type'] === 'hotel' ? $uom->hotel_price : $uom->store_price;
+                        if ($unitPrice === null) {
+                            throw new \InvalidArgumentException("Harga kemasan produk {$product->name} belum diatur.");
+                        }
+                    } else {
+                        $factor = $selectedUom === null
+                            ? 1
+                            : ($selectedUom->conversion_type === 'divide' ? 1 / (float) $selectedUom->conversion_factor : (float) $selectedUom->conversion_factor);
+                        $unitPrice = $data['document_type'] === 'hotel' ? $product->hotel_price : $product->store_price;
+                    }
+                    $baseQuantity = (float) $item['quantity'] * $factor;
                     $lineTotal = number_format((float) $unitPrice * (float) $item['quantity'], 2, '.', '');
                     $subtotal = number_format((float) $subtotal + (float) $lineTotal, 2, '.', '');
-                    $lines[] = compact('product', 'item', 'uom', 'factor', 'baseQuantity', 'unitPrice', 'lineTotal');
+                    $lines[] = ['product' => $product, 'item' => $item, 'uom' => $selectedUom, 'factor' => $factor, 'baseQuantity' => $baseQuantity, 'unitPrice' => $unitPrice, 'lineTotal' => $lineTotal];
                 }
 
                 $discountType = $data['discount_type'] ?? null;
