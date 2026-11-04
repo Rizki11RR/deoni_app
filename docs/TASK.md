@@ -42,7 +42,7 @@
 - [x] Stocktake dan rekonsiliasi bertahap.
 
 ## Phase 5: Laporan dan hardening
-- [ ] Laporan penjualan/pembayaran.
+- [x] Laporan penjualan/pembayaran.
 - [ ] Piutang/bon bila diperlukan.
 - [x] Audit log viewer.
 - [ ] Backup dan uji restore.
