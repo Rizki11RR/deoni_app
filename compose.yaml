@@ -1,0 +1,35 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      pgsql:
+        condition: service_healthy
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+
+  pgsql:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: cake_store
+      POSTGRES_USER: cake_store
+      POSTGRES_PASSWORD: change-me
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgsql-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cake_store -d cake_store"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgsql-data:

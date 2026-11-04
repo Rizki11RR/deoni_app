@@ -1,0 +1,10 @@
+@import '@tabler/core/dist/css/tabler.min.css';
+
+:root {
+    --tblr-primary: #9b2c2c;
+}
+
+:focus-visible {
+    outline: 2px solid var(--tblr-primary);
+    outline-offset: 2px;
+}
