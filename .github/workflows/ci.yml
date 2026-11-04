@@ -28,7 +28,6 @@ jobs:
           --health-retries=5
     env:
       APP_ENV: testing
-      APP_KEY: base64:QkFTRTY0X1RFU1RfS0VZX0ZPUl9DSQo=
       DB_CONNECTION: pgsql
       DB_HOST: 127.0.0.1
       DB_PORT: 5432
@@ -58,6 +57,9 @@ jobs:
 
       - name: Prepare application
         run: cp .env.example .env && php artisan key:generate --force
+
+      - name: Clear application cache
+        run: php artisan optimize:clear
 
       - name: Run migrations
         run: php artisan migrate --force
