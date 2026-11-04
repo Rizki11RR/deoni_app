@@ -46,7 +46,7 @@
 - [x] Piutang/bon tanpa limit, jatuh tempo opsional, reminder overdue.
 - [x] Audit log viewer.
 - [x] Backup lokal dan uji restore.
-- [ ] Uji hak akses, concurrency, sequence.
+- [x] Uji hak akses, concurrency, sequence.
 - [ ] Uji printer/kertas nyata.
 - [ ] UAT dengan staf.
 - [x] Dokumentasi deployment shared hosting.
